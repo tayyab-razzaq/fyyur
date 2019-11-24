@@ -49,6 +49,36 @@ class City(BaseModel):
     venues = db.relationship('Venue', backref='city')
     artists = db.relationship('Artist', backref='city')
 
+    @property
+    def state_name(self):
+        """
+        Name of the city state.
+
+        :return:
+        """
+        return self.state.name if self.state else None
+
+    @property
+    def serialized_data(self):
+        """
+        Serialized data of the city model instance.
+
+        :return:
+        """
+        return {
+            'id': self.id,
+            'city': self.name,
+            'state': self.state_name
+        }
+
+    def __repr__(self):
+        """
+        String representation of the City model instance.
+
+        :return:
+        """
+        return f'<Venue {self.id} {self.name} {self.state_name}>'
+
 
 class Venue(BaseModel):
     __tablename__ = 'Venue'
@@ -62,9 +92,22 @@ class Venue(BaseModel):
     facebook_link = db.Column(db.String(120))
 
     @property
-    def state(self):
-        """Get State."""
-        return self.city.state
+    def serialized_data(self):
+        """
+        Serialized data of the venue model instance.
+
+        :return:
+        """
+        return {
+            'id': self.id,
+            'name': self.name,
+            'address': self.address,
+            'phone': self.phone,
+            'image_link': self.image_link,
+            'facebook_link': self.facebook_link,
+            'city': self.city.name,
+            'state': self.city.state_name,
+        }
 
     def __repr__(self):
         """

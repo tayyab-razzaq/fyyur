@@ -16,8 +16,15 @@ from forms import *
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data. num_shows should be aggregated based on number of upcoming shows per venue.
-    return render_template('pages/venues.html', areas=venues_data)
+    cities = City.query.filter(City.venues.any())
+    cities_data = []
+    for city in cities:
+        venues_list = [venue_data.serialized_data for venue_data in city.venues]
+        serialized_data = city.serialized_data
+        serialized_data['venues'] = venues_list
+        cities_data.append(serialized_data)
+
+    return render_template('pages/venues.html', areas=cities_data)
 
 
 @app.route('/venues/search', methods=['POST'])
