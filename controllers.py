@@ -1,10 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import (
-    venues_data, venue_1, venue_2, venue_3, venue,
-    artist_data, artist_1, artist_2, artist_3, artist,
-    shows_data
-)
+from dummy_data import venue, artist_data, artist_1, artist_2, artist_3, artist, shows_data
 
 from models import *
 from forms import *
@@ -16,32 +12,39 @@ from forms import *
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data. num_shows should be aggregated based on number of upcoming shows per venue.
-    return render_template('pages/venues.html', areas=venues_data)
+    cities = City.query.filter(City.venues.any())
+    cities_data = []
+    for city in cities:
+        venues_list = [venue_data.serialized_data for venue_data in city.venues]
+        serialized_data = city.serialized_data
+        serialized_data['venues'] = venues_list
+        cities_data.append(serialized_data)
+
+    return render_template('pages/venues.html', areas=cities_data)
 
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for Hop should return "The Musical Hop".
-    # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+    search_value = request.form.get('search_term', '')
+    venues_list = [
+        venue_data.serialized_data for venue_data in Venue.query.filter(Venue.name.ilike(f'%{search_value}%'))]
     response = {
-        "count": 1,
-        "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(venues_list),
+        "data": venues_list
     }
-    return render_template('pages/search_venues.html', results=response,
-                           search_term=request.form.get('search_term', ''))
+    return render_template('pages/search_venues.html', results=response, search_term=search_value)
 
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
-    data = list(filter(lambda d: d['id'] == venue_id, [venue_1, venue_2, venue_3]))[0]
+    """
+    shows the venue page with the given venue_id.
+
+    :param venue_id:
+    :return:
+    """
+    venue_instance = Venue.query.filter_by(id=venue_id).first()
+    data = venue_instance.serialized_data
     return render_template('pages/show_venue.html', venue=data)
 
 
