@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import venue, artist_data, artist_1, artist_2, artist_3, artist, shows_data
+from dummy_data import venue, artist, shows_data
 
 from models import *
 from forms import *
@@ -97,32 +97,42 @@ def edit_venue_submission(venue_id):
 
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
-    return render_template('pages/artists.html', artists=artist_data)
+    """
+    Return the list of all artists.
+
+    :return:
+    """
+    artists_list = [{"id": artist_data.id, "name": artist_data.name} for artist_data in Artist.query.all()]
+    return render_template('pages/artists.html', artists=artists_list)
 
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-    # search for "band" should return "The Wild Sax Band".
+    """
+    Return the list of artists filtered by name based on search term.
+
+    :return:
+    """
+    search_value = request.form.get('search_term', '')
+    artists_list = [{"id": artist_data.id, "name": artist_data.name, "num_upcoming_shows": 0}
+                    for artist_data in Artist.query.filter(Artist.name.ilike(f'%{search_value}%'))]
     response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(artists_list),
+        "data": artists_list
     }
-    return render_template('pages/search_artists.html', results=response,
-                           search_term=request.form.get('search_term', ''))
+    return render_template('pages/search_artists.html', results=response, search_term=search_value)
 
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
-    data = list(filter(lambda d: d['id'] == artist_id, [artist_1, artist_2, artist_3]))[0]
+    """
+    Show the artist page by given artist_id.
+
+    :param artist_id:
+    :return:
+    """
+    artist_instance = Artist.query.filter_by(id=artist_id).first()
+    data = artist_instance.serialized_data
     return render_template('pages/show_artist.html', artist=data)
 
 

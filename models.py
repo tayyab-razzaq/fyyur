@@ -132,9 +132,21 @@ class Artist(BaseModel):
     city_id = db.Column(db.Integer, db.ForeignKey('City.id'))
 
     @property
-    def state(self):
-        """Get State."""
-        return self.city.state
+    def serialized_data(self):
+        """
+        Serialized data of the artist model instance.
+
+        :return:
+        """
+        return {
+            'id': self.id,
+            'name': self.name,
+            'phone': self.phone,
+            'image_link': self.image_link,
+            'facebook_link': self.facebook_link,
+            'city': self.city.name,
+            'state': self.city.state_name,
+        }
 
     def __repr__(self):
         """
