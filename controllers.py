@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import venue, artist_data, artist_1, artist_2, artist_3, artist, shows_data
+from dummy_data import venue, artist_1, artist_2, artist_3, artist, shows_data
 
 from models import *
 from forms import *
@@ -97,8 +97,13 @@ def edit_venue_submission(venue_id):
 
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
-    return render_template('pages/artists.html', artists=artist_data)
+    """
+    Return the list of all artists.
+
+    :return:
+    """
+    artists_list = [{"id": artist_data.id, "name": artist_data.name} for artist_data in Artist.query.all()]
+    return render_template('pages/artists.html', artists=artists_list)
 
 
 @app.route('/artists/search', methods=['POST'])
