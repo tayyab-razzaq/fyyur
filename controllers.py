@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import venue, artist_1, artist_2, artist_3, artist, shows_data
+from dummy_data import venue, artist, shows_data
 
 from models import *
 from forms import *
@@ -125,9 +125,14 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
-    data = list(filter(lambda d: d['id'] == artist_id, [artist_1, artist_2, artist_3]))[0]
+    """
+    Show the artist page by given artist_id.
+
+    :param artist_id:
+    :return:
+    """
+    artist_instance = Artist.query.filter_by(id=artist_id).first()
+    data = artist_instance.serialized_data
     return render_template('pages/show_artist.html', artist=data)
 
 
