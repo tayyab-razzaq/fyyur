@@ -30,14 +30,6 @@ class BaseModel(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
     modified_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
 
 class City(BaseModel):
     """City Table."""
@@ -157,6 +149,5 @@ class Artist(BaseModel):
         return f'<Artist {self.id} {self.name}>'
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
