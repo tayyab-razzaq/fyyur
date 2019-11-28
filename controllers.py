@@ -56,27 +56,38 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    form_data = request.form
-    city_id = City.get_city_id(form_data['city'], form_data['state'])
-    venue_data = Venue(
-        name=form_data.get('name'),
-        city_id=city_id,
-        address=form_data.get('address'),
-        phone=form_data.get('phone'),
-        image_link=form_data.get('image_link'),
-        facebook_link=form_data.get('facebook_link')
-    )
-    try:
-        db.session.add(venue_data)
-        db.session.commit()
-        flash('Venue ' + venue_data.name + ' was successfully listed!')
-    except:
-        db.session.rollback()
-        flash('An error occurred. Venue ' + venue_data.name + ' could not be listed.')
-    finally:
-        db.session.close()
+    form = VenueForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        venue_data = Venue(
+            name=form_data.get('name'),
+            city_id=city_id,
+            address=form_data.get('address'),
+            phone=form_data.get('phone'),
+            image_link=form_data.get('image_link'),
+            facebook_link=form_data.get('facebook_link')
+        )
+        try:
+            db.session.add(venue_data)
+            db.session.commit()
+            flash(f'Venue {venue_data.name} was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Venue {venue_data.name} could not be listed.')
+        finally:
+            db.session.close()
 
-    return render_template('pages/home.html')
+        return render_template('pages/home.html')
+
+    errors = form.errors
+
+    flash('Below Errors Occurred while creating Venue')
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return render_template('forms/new_venue.html', form=form)
 
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
