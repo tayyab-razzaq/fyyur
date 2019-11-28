@@ -41,6 +41,32 @@ class City(BaseModel):
     venues = db.relationship('Venue', backref='city')
     artists = db.relationship('Artist', backref='city')
 
+    @classmethod
+    def get_city_id(cls, city, state):
+        """
+        Get city id by city name and state name.
+
+        :param city:
+        :param state:
+        :return:
+        """
+        city_instance = cls.query.filter_by(name=city, state=state).first()
+        if city_instance:
+            return city_instance.id
+
+        city_instance = cls(name=city, state=state)
+        try:
+            db.session.add(city_instance)
+            db.session.commit()
+        except:
+            city_instance = None
+            db.session.rollback()
+        finally:
+            city_id = city_instance.id if city_instance else None
+            db.session.close()
+
+        return city_id
+
     @property
     def state_name(self):
         """
