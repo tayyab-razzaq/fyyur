@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import artist, shows_data
+from dummy_data import shows_data
 
 from models import *
 from forms import *
@@ -168,7 +168,7 @@ def artists():
 
     :return:
     """
-    artists_list = [{"id": artist_data.id, "name": artist_data.name} for artist_data in Artist.query.all()]
+    artists_list = [{"id": artist.id, "name": artist.name} for artist in Artist.query.all()]
     return render_template('pages/artists.html', artists=artists_list)
 
 
@@ -180,8 +180,9 @@ def search_artists():
     :return:
     """
     search_value = request.form.get('search_term', '')
-    artists_list = [{"id": artist_data.id, "name": artist_data.name, "num_upcoming_shows": 0}
-                    for artist_data in Artist.query.filter(Artist.name.ilike(f'%{search_value}%'))]
+    artists_list = [
+        {"id": artist.id, "name": artist.name, "num_upcoming_shows": 0}
+        for artist in Artist.query.filter(Artist.name.ilike(f'%{search_value}%'))]
     response = {
         "count": len(artists_list),
         "data": artists_list
@@ -197,16 +198,15 @@ def show_artist(artist_id):
     :param artist_id:
     :return:
     """
-    artist_instance = Artist.query.filter_by(id=artist_id).first()
-    data = artist_instance.serialized_data
-    return render_template('pages/show_artist.html', artist=data)
+    artist = Artist.query.filter_by(id=artist_id).first()
+    return render_template('pages/show_artist.html', artist=artist.serialized_data)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    artist_instance = Artist.query.filter_by(id=artist_id).first()
-    serialized_artist = artist_instance.serialized_data
-    form = ArtistForm(obj=artist_instance)
+    artist = Artist.query.filter_by(id=artist_id).first()
+    serialized_artist = artist.serialized_data
+    form = ArtistForm(obj=artist)
     form.state.process_data(serialized_artist.get('state'))
     form.city.process_data(serialized_artist.get('city'))
     return render_template('forms/edit_artist.html', form=form, artist=serialized_artist)
@@ -214,22 +214,22 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    artist_instance = Artist.query.filter_by(id=artist_id).first()
+    artist = Artist.query.filter_by(id=artist_id).first()
     form = VenueForm()
     if form.validate_on_submit():
         form_data = request.form
         city_id = City.get_city_id(form_data['city'], form_data['state'])
-        artist_instance.name = form_data.get('name')
-        artist_instance.city_id = city_id
-        artist_instance.phone = form_data.get('phone')
-        artist_instance.image_link = form_data.get('image_link')
-        artist_instance.facebook_link = form_data.get('facebook_link')
+        artist.name = form_data.get('name')
+        artist.city_id = city_id
+        artist.phone = form_data.get('phone')
+        artist.image_link = form_data.get('image_link')
+        artist.facebook_link = form_data.get('facebook_link')
         try:
             db.session.commit()
-            flash(f'Artist {artist_instance.name} was successfully listed!')
+            flash(f'Artist {artist.name} was successfully listed!')
         except:
             db.session.rollback()
-            flash(f'An error occurred. Artist {artist_instance.name} could not be listed.')
+            flash(f'An error occurred. Artist {artist.name} could not be listed.')
         finally:
             db.session.close()
 
@@ -257,7 +257,7 @@ def create_artist_submission():
     if form.validate_on_submit():
         form_data = request.form
         city_id = City.get_city_id(form_data['city'], form_data['state'])
-        artist_data = Artist(
+        artist = Artist(
             name=form_data.get('name'),
             city_id=city_id,
             phone=form_data.get('phone'),
@@ -265,12 +265,12 @@ def create_artist_submission():
             facebook_link=form_data.get('facebook_link')
         )
         try:
-            db.session.add(artist_data)
+            db.session.add(artist)
             db.session.commit()
-            flash(f'Artist {artist_data.name} was successfully listed!')
+            flash(f'Artist {artist.name} was successfully listed!')
         except:
             db.session.rollback()
-            flash(f'An error occurred. Artist {artist_data.name} could not be listed.')
+            flash(f'An error occurred. Artist {artist.name} could not be listed.')
         finally:
             db.session.close()
 
