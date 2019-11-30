@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import venue, artist, shows_data
+from dummy_data import artist, shows_data
 
 from models import *
 from forms import *
@@ -12,10 +12,15 @@ from forms import *
 
 @app.route('/venues')
 def venues():
+    """
+    Get list of all venues group by city.
+
+    :return:
+    """
     cities = City.query.filter(City.venues.any())
     cities_data = []
     for city in cities:
-        venues_list = [venue_data.serialized_data for venue_data in city.venues]
+        venues_list = [venue.serialized_data for venue in city.venues]
         serialized_data = city.serialized_data
         serialized_data['venues'] = venues_list
         cities_data.append(serialized_data)
@@ -25,9 +30,13 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
+    """
+    Get list of venue result filtered by search value.
+
+    :return:
+    """
     search_value = request.form.get('search_term', '')
-    venues_list = [
-        venue_data.serialized_data for venue_data in Venue.query.filter(Venue.name.ilike(f'%{search_value}%'))]
+    venues_list = [venue.serialized_data for venue in Venue.query.filter(Venue.name.ilike(f'%{search_value}%'))]
     response = {
         "count": len(venues_list),
         "data": venues_list
@@ -43,9 +52,8 @@ def show_venue(venue_id):
     :param venue_id:
     :return:
     """
-    venue_instance = Venue.query.filter_by(id=venue_id).first()
-    data = venue_instance.serialized_data
-    return render_template('pages/show_venue.html', venue=data)
+    venue = Venue.query.filter_by(id=venue_id).first()
+    return render_template('pages/show_venue.html', venue=venue.serialized_data)
 
 
 @app.route('/venues/create', methods=['GET'])
@@ -60,7 +68,7 @@ def create_venue_submission():
     if form.validate_on_submit():
         form_data = request.form
         city_id = City.get_city_id(form_data['city'], form_data['state'])
-        venue_data = Venue(
+        venue = Venue(
             name=form_data.get('name'),
             city_id=city_id,
             address=form_data.get('address'),
@@ -69,12 +77,12 @@ def create_venue_submission():
             facebook_link=form_data.get('facebook_link')
         )
         try:
-            db.session.add(venue_data)
+            db.session.add(venue)
             db.session.commit()
-            flash(f'Venue {venue_data.name} was successfully listed!')
+            flash(f'Venue {venue.name} was successfully listed!')
         except:
             db.session.rollback()
-            flash(f'An error occurred. Venue {venue_data.name} could not be listed.')
+            flash(f'An error occurred. Venue {venue.name} could not be listed.')
         finally:
             db.session.close()
 
@@ -102,23 +110,51 @@ def delete_venue(venue_id):
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+    return render_template('pages/home.html')
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    venue_instance = Venue.query.filter_by(id=venue_id).first()
-    form = VenueForm()
-    # TODO: populate form with values from venue with ID <venue_id>
-    return render_template('forms/edit_venue.html', form=form, venue=venue)
+    venue = Venue.query.filter_by(id=venue_id).first()
+    serialized_venue = venue.serialized_data
+    form = VenueForm(obj=venue)
+    form.state.process_data(serialized_venue.get('state'))
+    form.city.process_data(serialized_venue.get('city'))
+    return render_template('forms/edit_venue.html', form=form, venue=serialized_venue)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
-    # venue record with ID <venue_id> using the new attributes
-    venue_instance = Venue.query.filter_by(id=venue_id).first()
-    return redirect(url_for('show_venue', venue_id=venue_id))
+    venue = Venue.query.filter_by(id=venue_id).first()
+    form = VenueForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        venue.name = form_data.get('name')
+        venue.city_id = city_id
+        venue.address = form_data.get('address')
+        venue.phone = form_data.get('phone')
+        venue.image_link = form_data.get('image_link')
+        venue.facebook_link = form_data.get('facebook_link')
+        try:
+            db.session.commit()
+            flash(f'Venue {venue.name} was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Venue {venue.name} could not be listed.')
+        finally:
+            db.session.close()
+
+        return redirect(url_for('show_venue', venue_id=venue_id))
+
+    errors = form.errors
+
+    flash('Below Errors Occurred while creating Venue')
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return edit_venue(venue_id)
 
 
 # ==================================================================================================================== #
