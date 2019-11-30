@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import artist, shows_data
+from dummy_data import shows_data
 
 from models import *
 from forms import *
@@ -58,12 +58,22 @@ def show_venue(venue_id):
 
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
+    """
+    Create venue from.
+
+    :return:
+    """
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
+    """
+    Create venue using form data.
+
+    :return:
+    """
     form = VenueForm()
     if form.validate_on_submit():
         form_data = request.form
@@ -100,6 +110,12 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
+    """
+    Delete venue by given venue id.
+
+    :param venue_id:
+    :return:
+    """
     try:
         Venue.query.filter_by(id=venue_id).delete()
         db.session.commit()
@@ -115,6 +131,12 @@ def delete_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
+    """
+    Edit venue form.
+
+    :param venue_id:
+    :return:
+    """
     venue = Venue.query.filter_by(id=venue_id).first()
     serialized_venue = venue.serialized_data
     form = VenueForm(obj=venue)
@@ -125,6 +147,12 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
+    """
+    Edit venue using form data.
+
+    :param venue_id:
+    :return:
+    """
     venue = Venue.query.filter_by(id=venue_id).first()
     form = VenueForm()
     if form.validate_on_submit():
@@ -168,7 +196,7 @@ def artists():
 
     :return:
     """
-    artists_list = [{"id": artist_data.id, "name": artist_data.name} for artist_data in Artist.query.all()]
+    artists_list = [{"id": artist.id, "name": artist.name} for artist in Artist.query.all()]
     return render_template('pages/artists.html', artists=artists_list)
 
 
@@ -180,8 +208,9 @@ def search_artists():
     :return:
     """
     search_value = request.form.get('search_term', '')
-    artists_list = [{"id": artist_data.id, "name": artist_data.name, "num_upcoming_shows": 0}
-                    for artist_data in Artist.query.filter(Artist.name.ilike(f'%{search_value}%'))]
+    artists_list = [
+        {"id": artist.id, "name": artist.name, "num_upcoming_shows": 0}
+        for artist in Artist.query.filter(Artist.name.ilike(f'%{search_value}%'))]
     response = {
         "count": len(artists_list),
         "data": artists_list
@@ -197,43 +226,114 @@ def show_artist(artist_id):
     :param artist_id:
     :return:
     """
-    artist_instance = Artist.query.filter_by(id=artist_id).first()
-    data = artist_instance.serialized_data
-    return render_template('pages/show_artist.html', artist=data)
+    artist = Artist.query.filter_by(id=artist_id).first()
+    return render_template('pages/show_artist.html', artist=artist.serialized_data)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    form = ArtistForm()
-    # TODO: populate form with fields from artist with ID <artist_id>
-    return render_template('forms/edit_artist.html', form=form, artist=artist)
+    """
+    Edit artist form.
+
+    :param artist_id:
+    :return:
+    """
+    artist = Artist.query.filter_by(id=artist_id).first()
+    serialized_artist = artist.serialized_data
+    form = ArtistForm(obj=artist)
+    form.state.process_data(serialized_artist.get('state'))
+    form.city.process_data(serialized_artist.get('city'))
+    return render_template('forms/edit_artist.html', form=form, artist=serialized_artist)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
-    # artist record with ID <artist_id> using the new attributes
+    """
+    Edit artist using from data.
 
-    return redirect(url_for('show_artist', artist_id=artist_id))
+    :param artist_id:
+    :return:
+    """
+    artist = Artist.query.filter_by(id=artist_id).first()
+    form = VenueForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        artist.name = form_data.get('name')
+        artist.city_id = city_id
+        artist.phone = form_data.get('phone')
+        artist.image_link = form_data.get('image_link')
+        artist.facebook_link = form_data.get('facebook_link')
+        try:
+            db.session.commit()
+            flash(f'Artist {artist.name} was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Artist {artist.name} could not be listed.')
+        finally:
+            db.session.close()
+
+        return redirect(url_for('show_artist', artist_id=artist_id))
+
+    errors = form.errors
+
+    flash('Below Errors Occurred while creating Venue')
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return edit_artist(artist_id)
 
 
 @app.route('/artists/create', methods=['GET'])
 def create_artist_form():
+    """
+    Create artist form.
+
+    :return:
+    """
     form = ArtistForm()
     return render_template('forms/new_artist.html', form=form)
 
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    """
+    Save Artist to the data base using form data.
 
-    # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-    return render_template('pages/home.html')
+    :return:
+    """
+    form = ArtistForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        artist = Artist(
+            name=form_data.get('name'),
+            city_id=city_id,
+            phone=form_data.get('phone'),
+            image_link=form_data.get('image_link'),
+            facebook_link=form_data.get('facebook_link')
+        )
+        try:
+            db.session.add(artist)
+            db.session.commit()
+            flash(f'Artist {artist.name} was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Artist {artist.name} could not be listed.')
+        finally:
+            db.session.close()
+
+        return render_template('pages/home.html')
+
+    errors = form.errors
+
+    flash('Below Errors Occurred while creating Artist')
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return render_template('forms/new_artist.html', form=form)
 
 
 # ==================================================================================================================== #
