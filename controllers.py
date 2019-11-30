@@ -204,9 +204,13 @@ def show_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    form = ArtistForm()
-    # TODO: populate form with fields from artist with ID <artist_id>
+    artist_instance = Artist.query.filter_by(id=artist_id).first()
+    serialized_venue = artist_instance.serialized_data
+    form = ArtistForm(obj=artist_instance)
+    form.state.process_data(serialized_venue.get('state'))
+    form.city.process_data(serialized_venue.get('city'))
     return render_template('forms/edit_artist.html', form=form, artist=artist)
+    # TODO: populate form with fields from artist with ID <artist_id>
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
