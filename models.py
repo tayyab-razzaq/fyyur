@@ -63,7 +63,6 @@ class City(BaseModel):
             db.session.rollback()
         finally:
             city_id = city_instance.id if city_instance else None
-            db.session.close()
 
         return city_id
 
