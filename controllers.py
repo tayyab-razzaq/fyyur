@@ -1,6 +1,6 @@
 from flask import render_template, request, flash, redirect, url_for
 
-from dummy_data import venue, artist, shows_data
+from dummy_data import artist, shows_data
 
 from models import *
 from forms import *
@@ -108,17 +108,44 @@ def delete_venue(venue_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     venue_instance = Venue.query.filter_by(id=venue_id).first()
-    form = VenueForm()
-    # TODO: populate form with values from venue with ID <venue_id>
-    return render_template('forms/edit_venue.html', form=form, venue=venue)
+    form = VenueForm(obj=venue_instance)
+    form.state.process_data(venue_instance.serialized_data.get('state'))
+    form.city.process_data(venue_instance.serialized_data.get('city'))
+    return render_template('forms/edit_venue.html', form=form, venue=venue_instance.serialized_data)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
-    # venue record with ID <venue_id> using the new attributes
     venue_instance = Venue.query.filter_by(id=venue_id).first()
-    return redirect(url_for('show_venue', venue_id=venue_id))
+    form = VenueForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        venue_instance.name = form_data.get('name')
+        venue_instance.city_id = city_id
+        venue_instance.address = form_data.get('address')
+        venue_instance.phone = form_data.get('phone')
+        venue_instance.image_link = form_data.get('image_link')
+        venue_instance.facebook_link = form_data.get('facebook_link')
+        try:
+            db.session.commit()
+            flash(f'Venue {venue_instance.name} was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Venue {venue_instance.name} could not be listed.')
+        finally:
+            db.session.close()
+
+        return redirect(url_for('show_venue', venue_id=venue_id))
+
+    errors = form.errors
+
+    flash('Below Errors Occurred while creating Venue')
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return edit_venue(venue_id)
 
 
 # ==================================================================================================================== #
