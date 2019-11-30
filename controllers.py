@@ -12,6 +12,11 @@ from forms import *
 
 @app.route('/venues')
 def venues():
+    """
+    Get list of all venues group by city.
+
+    :return:
+    """
     cities = City.query.filter(City.venues.any())
     cities_data = []
     for city in cities:
@@ -25,6 +30,11 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
+    """
+    Get list of venue result filtered by search value.
+
+    :return:
+    """
     search_value = request.form.get('search_term', '')
     venues_list = [venue.serialized_data for venue in Venue.query.filter(Venue.name.ilike(f'%{search_value}%'))]
     response = {
@@ -100,7 +110,7 @@ def delete_venue(venue_id):
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+    return render_template('pages/home.html')
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
