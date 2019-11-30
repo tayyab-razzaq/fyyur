@@ -204,6 +204,12 @@ def show_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
+    """
+    Edit artist form.
+    
+    :param artist_id:
+    :return:
+    """
     artist = Artist.query.filter_by(id=artist_id).first()
     serialized_artist = artist.serialized_data
     form = ArtistForm(obj=artist)
@@ -214,6 +220,12 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
+    """
+    Edit artist using from data.
+
+    :param artist_id:
+    :return:
+    """
     artist = Artist.query.filter_by(id=artist_id).first()
     form = VenueForm()
     if form.validate_on_submit():
@@ -247,12 +259,22 @@ def edit_artist_submission(artist_id):
 
 @app.route('/artists/create', methods=['GET'])
 def create_artist_form():
+    """
+    Create artist form.
+
+    :return:
+    """
     form = ArtistForm()
     return render_template('forms/new_artist.html', form=form)
 
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
+    """
+    Save Artist to the data base using form data.
+
+    :return:
+    """
     form = ArtistForm()
     if form.validate_on_submit():
         form_data = request.form
