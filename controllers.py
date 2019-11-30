@@ -210,15 +210,39 @@ def edit_artist(artist_id):
     form.state.process_data(serialized_venue.get('state'))
     form.city.process_data(serialized_venue.get('city'))
     return render_template('forms/edit_artist.html', form=form, artist=artist)
-    # TODO: populate form with fields from artist with ID <artist_id>
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
-    # artist record with ID <artist_id> using the new attributes
+    artist_instance = Artist.query.filter_by(id=artist_id).first()
+    form = VenueForm()
+    if form.validate_on_submit():
+        form_data = request.form
+        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        artist_instance.name = form_data.get('name')
+        artist_instance.city_id = city_id
+        artist_instance.phone = form_data.get('phone')
+        artist_instance.image_link = form_data.get('image_link')
+        artist_instance.facebook_link = form_data.get('facebook_link')
+        try:
+            db.session.commit()
+            flash(f'Artist {artist_instance.name} was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Artist {artist_instance.name} could not be listed.')
+        finally:
+            db.session.close()
 
-    return redirect(url_for('show_artist', artist_id=artist_id))
+        return redirect(url_for('show_artist', artist_id=artist_id))
+
+    errors = form.errors
+
+    flash('Below Errors Occurred while creating Venue')
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return edit_artist(artist_id)
 
 
 @app.route('/artists/create', methods=['GET'])
