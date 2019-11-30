@@ -58,12 +58,22 @@ def show_venue(venue_id):
 
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
+    """
+    Create venue from.
+
+    :return:
+    """
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
+    """
+    Create venue using form data.
+
+    :return:
+    """
     form = VenueForm()
     if form.validate_on_submit():
         form_data = request.form
@@ -100,6 +110,12 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
+    """
+    Delete venue by given venue id.
+
+    :param venue_id:
+    :return:
+    """
     try:
         Venue.query.filter_by(id=venue_id).delete()
         db.session.commit()
@@ -115,6 +131,12 @@ def delete_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
+    """
+    Edit venue form.
+
+    :param venue_id:
+    :return:
+    """
     venue = Venue.query.filter_by(id=venue_id).first()
     serialized_venue = venue.serialized_data
     form = VenueForm(obj=venue)
@@ -125,6 +147,12 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
+    """
+    Edit venue using form data.
+
+    :param venue_id:
+    :return:
+    """
     venue = Venue.query.filter_by(id=venue_id).first()
     form = VenueForm()
     if form.validate_on_submit():
@@ -206,7 +234,7 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
     """
     Edit artist form.
-    
+
     :param artist_id:
     :return:
     """
