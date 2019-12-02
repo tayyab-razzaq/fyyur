@@ -193,3 +193,29 @@ class Show(db.Model):
 
     artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+
+    @property
+    def serialized_data(self):
+        """
+        Serialized data of the artist model instance.
+
+        :return:
+        """
+        return {
+            'id': self.id,
+            'start_time': self.start_time,
+            'venue_id': self.venue_id,
+            'venue_name': self.venue.name,
+            'venue_image_link': self.venue.image_link,
+            'artist_id': self.artist_id,
+            'artist_name': self.artist.name,
+            'artist_image_link': self.artist.image_link
+        }
+
+    def __repr__(self):
+        """
+        String representation of the Show model instance.
+
+        :return:
+        """
+        return f'<Show {self.id} {str(self.start_time)}>'
