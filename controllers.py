@@ -349,7 +349,11 @@ def shows():
 
 @app.route('/shows/create')
 def create_shows():
-    # renders form. do not touch.
+    """
+    Create Shows form.
+
+    :return:
+    """
     form = ShowForm()
     return render_template('forms/new_show.html', form=form)
 
