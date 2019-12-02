@@ -1,7 +1,4 @@
 from flask import render_template, request, flash, redirect, url_for
-
-from dummy_data import shows_data
-
 from models import *
 from forms import *
 
@@ -342,8 +339,7 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-    # displays list of shows at /shows
-    # TODO: replace with real venues data. num_shows should be aggregated based on number of upcoming shows per venue.
+    shows_data = [show.serialized_data for show in Show.query.all()]
     return render_template('pages/shows.html', shows=shows_data)
 
 
