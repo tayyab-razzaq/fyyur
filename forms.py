@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
+from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, URL
 from constants import STATES, GENRES
 
@@ -16,11 +16,14 @@ class VenueForm(FlaskForm):
     city = StringField('city', validators=[DataRequired()])
     state = SelectField('state', validators=[DataRequired()], choices=STATES)
     address = StringField('address', validators=[DataRequired()])
+    website = StringField('website')
     phone = StringField('phone')
-    image_link = StringField('image_link')
+    seeking_talent = BooleanField('seeking_talent')
+    seeking_description = StringField('seeking_description')
     # TODO implement enum restriction
     genres = SelectMultipleField('genres', validators=[DataRequired()], choices=GENRES)
     facebook_link = StringField('facebook_link', validators=[URL()])
+    image_link = StringField('image_link', validators=[URL()])
 
 
 class ArtistForm(FlaskForm):
@@ -29,10 +32,11 @@ class ArtistForm(FlaskForm):
     state = SelectField('state', validators=[DataRequired()], choices=STATES)
     # TODO implement validation logic for state
     phone = StringField('phone')
-    image_link = StringField('image_link')
+    website = StringField('website')
     # TODO implement enum restriction
     genres = SelectMultipleField('genres', validators=[DataRequired()], choices=GENRES)
     # TODO implement enum restriction
     facebook_link = StringField('facebook_link', validators=[URL()])
-
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
+    image_link = StringField('image_link', validators=[URL()])
+    seeking_venue = BooleanField('seeking_venue')
+    seeking_description = StringField('seeking_description')
