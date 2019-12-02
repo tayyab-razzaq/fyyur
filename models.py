@@ -203,7 +203,7 @@ class Show(db.Model):
         """
         return {
             'id': self.id,
-            'start_time': self.start_time,
+            'start_time': str(self.start_time),
             'venue_id': self.venue_id,
             'venue_name': self.venue.name,
             'venue_image_link': self.venue.image_link,
