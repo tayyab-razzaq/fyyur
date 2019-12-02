@@ -38,6 +38,7 @@ class City(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     state = db.Column(db.Enum(StatesEnum))
+
     venues = db.relationship('Venue', backref='city')
     artists = db.relationship('Artist', backref='city')
 
@@ -102,11 +103,14 @@ class Venue(BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    city_id = db.Column(db.Integer, db.ForeignKey('City.id'))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+
+    city_id = db.Column(db.Integer, db.ForeignKey('City.id'), nullable=False)
+
+    shows = db.relationship('Show', backref='venue')
 
     @property
     def serialized_data(self):
@@ -146,7 +150,10 @@ class Artist(BaseModel):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-    city_id = db.Column(db.Integer, db.ForeignKey('City.id'))
+
+    city_id = db.Column(db.Integer, db.ForeignKey('City.id'), nullable=False)
+
+    shows = db.relationship('Show', backref='artist')
 
     @property
     def serialized_data(self):
@@ -176,3 +183,39 @@ class Artist(BaseModel):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+
+class Show(db.Model):
+    __tablename__ = 'Show'
+
+    id = db.Column(db.Integer, primary_key=True)
+    start_time = db.Column(db.DateTime())
+
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+
+    @property
+    def serialized_data(self):
+        """
+        Serialized data of the artist model instance.
+
+        :return:
+        """
+        return {
+            'id': self.id,
+            'start_time': str(self.start_time),
+            'venue_id': self.venue_id,
+            'venue_name': self.venue.name,
+            'venue_image_link': self.venue.image_link,
+            'artist_id': self.artist_id,
+            'artist_name': self.artist.name,
+            'artist_image_link': self.artist.image_link
+        }
+
+    def __repr__(self):
+        """
+        String representation of the Show model instance.
+
+        :return:
+        """
+        return f'<Show {self.id} {str(self.start_time)}>'

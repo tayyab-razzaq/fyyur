@@ -1,7 +1,4 @@
 from flask import render_template, request, flash, redirect, url_for
-
-from dummy_data import shows_data
-
 from models import *
 from forms import *
 
@@ -342,14 +339,17 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-    # displays list of shows at /shows
-    # TODO: replace with real venues data. num_shows should be aggregated based on number of upcoming shows per venue.
+    shows_data = [show.serialized_data for show in Show.query.all()]
     return render_template('pages/shows.html', shows=shows_data)
 
 
 @app.route('/shows/create')
 def create_shows():
-    # renders form. do not touch.
+    """
+    Create Shows form.
+
+    :return:
+    """
     form = ShowForm()
     return render_template('forms/new_show.html', form=form)
 
@@ -358,10 +358,36 @@ def create_shows():
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     # TODO: insert form data as a new Show record in the db, instead
-
+    form = ShowForm()
     # on successful db insert, flash success
-    flash('Show was successfully listed!')
+    if form.validate_on_submit():
+        form_data = request.form
+        show = Show(
+            artist_id=form_data.get('artist_id'),
+            venue_id=form_data.get('venue_id'),
+            start_time=form_data.get('start_time')
+        )
+        try:
+            db.session.add(show)
+            db.session.commit()
+            flash('Show was successfully listed!')
+        except:
+            db.session.rollback()
+            flash(f'An error occurred. Show could not be listed.')
+        finally:
+            db.session.close()
+
+        return render_template('pages/home.html')
+
     # TODO: on unsuccessful db insert, flash an error instead.
     # e.g., flash('An error occurred. Show could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template('pages/home.html')
+    flash('Below Errors Occurred while creating Show')
+
+    errors = form.errors
+
+    for key in errors.keys():
+        error = errors[key]
+        flash(f'{key}: f{error}')
+
+    return render_template('forms/new_show.html', form=form)
