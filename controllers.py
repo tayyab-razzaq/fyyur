@@ -262,13 +262,17 @@ def edit_artist_submission(artist_id):
     artist = Artist.query.filter_by(id=artist_id).first()
     form = VenueForm()
     if form.validate_on_submit():
-        form_data = request.form
-        city_id = City.get_city_id(form_data['city'], form_data['state'])
-        artist.name = form_data.get('name')
+        city_id = City.get_city_id(form.city.data, form.state.data)
+        artist.name = form.name.data
         artist.city_id = city_id
-        artist.phone = form_data.get('phone')
-        artist.image_link = form_data.get('image_link')
-        artist.facebook_link = form_data.get('facebook_link')
+        artist.phone = form.phone.data
+        artist.image_link = form.image_link.data
+        artist.facebook_link = form.facebook_link.data
+        artist.website = form.website.data
+        artist.seeking_description = form.seeking_description.data
+        artist.seeking_venue = form.seeking_venue.data
+        artist.genres = form.genres.data
+
         try:
             db.session.commit()
             flash(f'Artist {artist.name} was successfully listed!')
@@ -310,14 +314,17 @@ def create_artist_submission():
     """
     form = ArtistForm()
     if form.validate_on_submit():
-        form_data = request.form
-        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        city_id = City.get_city_id(form.city.data, form.state.data)
         artist = Artist(
-            name=form_data.get('name'),
+            name=form.name.data,
             city_id=city_id,
-            phone=form_data.get('phone'),
-            image_link=form_data.get('image_link'),
-            facebook_link=form_data.get('facebook_link')
+            phone=form.phone.data,
+            image_link=form.image_link.data,
+            facebook_link=form.facebook_link.data,
+            website=form.website.data,
+            seeking_description=form.seeking_description.data,
+            seeking_venue=form.seeking_venue.data,
+            genres=form.genres.data
         )
         try:
             db.session.add(artist)
@@ -347,6 +354,11 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
+    """
+    List all shows.
+    
+    :return:
+    """
     shows_data = [show.serialized_data for show in Show.query.all()]
     return render_template('pages/shows.html', shows=shows_data)
 
@@ -364,16 +376,17 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    """
+    Create new show.
+
+    :return:
+    """
     form = ShowForm()
-    # on successful db insert, flash success
     if form.validate_on_submit():
-        form_data = request.form
         show = Show(
-            artist_id=form_data.get('artist_id'),
-            venue_id=form_data.get('venue_id'),
-            start_time=form_data.get('start_time')
+            artist_id=form.artist_id.data,
+            venue_id=form.venue_id.data,
+            start_time=form.start_time.data
         )
         try:
             db.session.add(show)
@@ -387,9 +400,6 @@ def create_show_submission():
 
         return render_template('pages/home.html')
 
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     flash('Below Errors Occurred while creating Show')
 
     errors = form.errors
