@@ -356,7 +356,7 @@ def create_artist_submission():
 def shows():
     """
     List all shows.
-    
+
     :return:
     """
     shows_data = [show.serialized_data for show in Show.query.all()]
