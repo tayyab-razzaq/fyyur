@@ -73,16 +73,20 @@ def create_venue_submission():
     """
     form = VenueForm()
     if form.validate_on_submit():
-        form_data = request.form
-        city_id = City.get_city_id(form_data['city'], form_data['state'])
+        city_id = City.get_city_id(form.city.data, form.state.data)
         venue = Venue(
-            name=form_data.get('name'),
+            name=form.name.data,
             city_id=city_id,
-            address=form_data.get('address'),
-            phone=form_data.get('phone'),
-            image_link=form_data.get('image_link'),
-            facebook_link=form_data.get('facebook_link')
+            address=form.address.data,
+            phone=form.phone.data,
+            image_link=form.image_link.data,
+            facebook_link=form.facebook_link.data,
+            website=form.website.data,
+            seeking_description=form.seeking_description.data,
+            seeking_talent=form.seeking_talent.data,
+            genres=form.genres.data
         )
+        # seeking talent and genre
         try:
             db.session.add(venue)
             db.session.commit()
@@ -153,14 +157,18 @@ def edit_venue_submission(venue_id):
     venue = Venue.query.filter_by(id=venue_id).first()
     form = VenueForm()
     if form.validate_on_submit():
-        form_data = request.form
-        city_id = City.get_city_id(form_data['city'], form_data['state'])
-        venue.name = form_data.get('name')
+        city_id = City.get_city_id(form.city.data, form.state.data)
+        venue.name = form.name.data
         venue.city_id = city_id
-        venue.address = form_data.get('address')
-        venue.phone = form_data.get('phone')
-        venue.image_link = form_data.get('image_link')
-        venue.facebook_link = form_data.get('facebook_link')
+        venue.address = form.address.data
+        venue.phone = form.phone.data
+        venue.image_link = form.image_link.data
+        venue.facebook_link = form.facebook_link.data
+        venue.website = form.website.data
+        venue.seeking_description = form.seeking_description.data
+        venue.seeking_talent = form.seeking_talent.data
+        venue.genres = form.genres.data
+
         try:
             db.session.commit()
             flash(f'Venue {venue.name} was successfully listed!')
