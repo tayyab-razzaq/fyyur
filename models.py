@@ -124,7 +124,17 @@ class Venue(BaseModel):
 
         :return:
         """
-        upcoming_shows = self.shows.filter(Show.start_time > datetime.now()).all()
+        upcoming_shows = Show.query.filter(Show.start_time > datetime.now(), Show.id == self.id).all()
+        return [show.serialized_data for show in upcoming_shows]
+
+    @property
+    def past_shows(self):
+        """
+        Get past shows list of current venue.
+
+        :return:
+        """
+        upcoming_shows = Show.query.filter(Show.start_time < datetime.now(), Show.id == self.id).all()
         return [show.serialized_data for show in upcoming_shows]
 
     @property
@@ -134,6 +144,9 @@ class Venue(BaseModel):
 
         :return:
         """
+        upcoming_shows = self.upcoming_shows
+        past_shows = self.past_shows
+
         return {
             'id': self.id,
             'name': self.name,
@@ -143,6 +156,11 @@ class Venue(BaseModel):
             'facebook_link': self.facebook_link,
             'city': self.city.name,
             'state': self.city.state_name,
+            'num_upcoming_shows': len(upcoming_shows),
+            'upcoming_shows_count': len(upcoming_shows),
+            'upcoming_shows': upcoming_shows,
+            'past_shows': past_shows,
+            'past_shows_count': len(past_shows),
         }
 
     def __repr__(self):
