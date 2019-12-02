@@ -2,6 +2,7 @@
 # Imports
 # ==================================================================================================================== #
 
+from datetime import datetime
 from flask import Flask
 from flask_moment import Moment
 from flask_migrate import Migrate
@@ -105,12 +106,36 @@ class Venue(BaseModel):
     name = db.Column(db.String)
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
+    website = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    seeking_talent = db.Column(db.BOOLEAN, default=False)
+    seeking_description = db.Column(db.String(500))
+    genres = db.Column(db.ARRAY(db.String))
 
     city_id = db.Column(db.Integer, db.ForeignKey('City.id'), nullable=False)
 
     shows = db.relationship('Show', backref='venue')
+
+    @property
+    def upcoming_shows(self):
+        """
+        Get upcoming shows list of current venue.
+
+        :return:
+        """
+        upcoming_shows = Show.query.filter(Show.start_time > datetime.now(), Show.venue_id == self.id).all()
+        return [show.serialized_data for show in upcoming_shows]
+
+    @property
+    def past_shows(self):
+        """
+        Get past shows list of current venue.
+
+        :return:
+        """
+        upcoming_shows = Show.query.filter(Show.start_time < datetime.now(), Show.venue_id == self.id).all()
+        return [show.serialized_data for show in upcoming_shows]
 
     @property
     def serialized_data(self):
@@ -119,6 +144,9 @@ class Venue(BaseModel):
 
         :return:
         """
+        upcoming_shows = self.upcoming_shows
+        past_shows = self.past_shows
+
         return {
             'id': self.id,
             'name': self.name,
@@ -128,6 +156,15 @@ class Venue(BaseModel):
             'facebook_link': self.facebook_link,
             'city': self.city.name,
             'state': self.city.state_name,
+            'genres': self.genres if self.genres else [],
+            'website': self.website,
+            'seeking_description': self.seeking_description,
+            'seeking_talent': self.seeking_talent,
+            'num_upcoming_shows': len(upcoming_shows),
+            'upcoming_shows_count': len(upcoming_shows),
+            'upcoming_shows': upcoming_shows,
+            'past_shows': past_shows,
+            'past_shows_count': len(past_shows),
         }
 
     def __repr__(self):
@@ -147,13 +184,36 @@ class Artist(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(db.ARRAY(db.String))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website = db.Column(db.String(120))
+    seeking_venue = db.Column(db.BOOLEAN, default=False)
+    seeking_description = db.Column(db.String(500))
 
     city_id = db.Column(db.Integer, db.ForeignKey('City.id'), nullable=False)
 
     shows = db.relationship('Show', backref='artist')
+
+    @property
+    def upcoming_shows(self):
+        """
+        Get upcoming shows list of current artist.
+
+        :return:
+        """
+        upcoming_shows = Show.query.filter(Show.start_time > datetime.now(), Show.artist_id == self.id).all()
+        return [show.serialized_data for show in upcoming_shows]
+
+    @property
+    def past_shows(self):
+        """
+        Get past shows list of current artist.
+
+        :return:
+        """
+        upcoming_shows = Show.query.filter(Show.start_time < datetime.now(), Show.artist_id == self.id).all()
+        return [show.serialized_data for show in upcoming_shows]
 
     @property
     def serialized_data(self):
@@ -162,6 +222,9 @@ class Artist(BaseModel):
 
         :return:
         """
+        upcoming_shows = self.upcoming_shows
+        past_shows = self.past_shows
+
         return {
             'id': self.id,
             'name': self.name,
@@ -170,6 +233,11 @@ class Artist(BaseModel):
             'facebook_link': self.facebook_link,
             'city': self.city.name,
             'state': self.city.state_name,
+            'num_upcoming_shows': len(upcoming_shows),
+            'upcoming_shows_count': len(upcoming_shows),
+            'upcoming_shows': upcoming_shows,
+            'past_shows': past_shows,
+            'past_shows_count': len(past_shows),
         }
 
     def __repr__(self):
