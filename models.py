@@ -175,8 +175,6 @@ class Venue(BaseModel):
         """
         return f'<Venue {self.id} {self.name}>'
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
 
 class Artist(BaseModel):
     __tablename__ = 'Artist'
@@ -247,10 +245,6 @@ class Artist(BaseModel):
         :return:
         """
         return f'<Artist {self.id} {self.name}>'
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 
 class Show(db.Model):
